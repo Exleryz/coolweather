@@ -8,7 +8,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary">
+        android:background="?attr/colorPrimary">    <!--碎片最好不要直接使用ActionBar Toolbar-->
 
         <TextView
             android:id="@+id/title_text"
