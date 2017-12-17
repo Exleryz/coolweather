@@ -69,7 +69,7 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {    // ListView设置点击事件 获取下一级的数据
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (currentLevel == LEVEL_PROVINCE) {
@@ -81,7 +81,7 @@ public class ChooseAreaFragment extends Fragment {
                 }
             }
         });
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new View.OnClickListener() {    // 设置返回键的点击事件，加载上一级的数据
             @Override
             public void onClick(View v) {
                 if (currentLevel == LEVEL_COUNTY) {
@@ -91,7 +91,7 @@ public class ChooseAreaFragment extends Fragment {
                 }
             }
         });
-        queryProvinces();
+        queryProvinces();    // 最初显示的ListView列表全是省份
     }
 
     private void queryProvinces() {    // 查询全国所有的省，优先从数据库查询，如果没有查询到再去服务器上查询
@@ -99,16 +99,16 @@ public class ChooseAreaFragment extends Fragment {
         backButton.setVisibility(View.GONE);
         provinceList = DataSupport.findAll(Province.class);
         if (provinceList.size() > 0) {
-            dataList.clear();
+            dataList.clear();    // 清空与ListView绑定的数据
             for (Province province : provinceList) {
-                dataList.add(province.getProvinceName());
+                dataList.add(province.getProvinceName());    // 添加
             }
-            adapter.notifyDataSetChanged();
-            listView.setSelection(0);
-            currentLevel = LEVEL_PROVINCE;
+            adapter.notifyDataSetChanged();    // 刷新列表
+            listView.setSelection(0);    // 将列表移动到指定的Position处
+            currentLevel = LEVEL_PROVINCE;    // 设置当前所在等级为省
         } else {
             String address = "http://guolin.tech/api/china";
-            queryFromServer(address, "province");
+            queryFromServer(address, "province");    // 从服务器获取
         }
     }
 
@@ -153,25 +153,24 @@ public class ChooseAreaFragment extends Fragment {
 
     private void queryFromServer(String address,final String type) {    // 根据传入的地址和类型从服务器上查询省市县的数据
         showProgressDialog();
-        HttpUtil.sendOkHttpRequest(address, new Callback() {
+        HttpUtil.sendOkHttpRequest(address, new Callback() {    // 向服务器发送请求，响应的数据会回调到onResponse()方法中
             @Override
             public void onFailure(Call call, IOException e) {
                 getActivity().runOnUiThread(new Runnable() {    // 通过runOnUiThread()方法回到主线程处理逻辑
-                    @Override
-                    public void run() {
-                        closeProgressDialog();
-                        Toast.makeText(getContext(), "加载失败", Toast.LENGTH_SHORT).show();
-                    }
+                        @Override
+                        public void run() {
+                            closeProgressDialog();    // 查询失败
+                            Toast.makeText(getContext(), "加载失败", Toast.LENGTH_SHORT).show();
+                        }
                 });
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String responseText = response.body().string();
+                String responseText = response.body().string();    // 希望获得返回的字符串 一个onResponse()只能有效调用一次
                 boolean result = false;
                 if ("province".equals(type)) {
-                    Log.d("admin", responseText);
-                    result = Utility.handleProvinceResponse(responseText);
+                    result = Utility.handleProvinceResponse(responseText);    // 获取省数据
                 } else if ("city".equals(type)) {
                     result = Utility.handleCityResponse(responseText, selectedProvince.getId());
                 } else if ("county".equals(type)) {
@@ -180,7 +179,7 @@ public class ChooseAreaFragment extends Fragment {
                 if (result) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
-                        public void run() {
+                        public void run() {    // 再次去数据库中查询
                             closeProgressDialog();
                             if ("province".equals(type)) {
                                 queryProvinces();

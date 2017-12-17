@@ -20,15 +20,14 @@ public class Utility {
 
     public static boolean handleProvinceResponse(String response) {    // 解析处理服务器返回的省级数据
         if (!TextUtils.isEmpty(response)) {
-            try {
+            try {    // 解析JSON字符串
                 JSONArray allProvinces = new JSONArray(response);
                 for (int i = 0; i < allProvinces.length(); i++) {
                     JSONObject provinceObject = allProvinces.getJSONObject(i);
                     Province province = new Province();
                     province.setProvinceName(provinceObject.getString("name"));
-                    Log.d("admin",province.getProvinceName());
                     province.setProvinceCode(provinceObject.getInt("id"));
-                    province.save();
+                    province.save();    // 存入数据库
                 }
                 return true;
             } catch (JSONException e) {
