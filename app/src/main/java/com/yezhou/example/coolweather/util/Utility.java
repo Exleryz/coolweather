@@ -1,6 +1,7 @@
 package com.yezhou.example.coolweather.util;
 
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.TextureView;
 
 import com.yezhou.example.coolweather.db.City;
@@ -25,6 +26,7 @@ public class Utility {
                     JSONObject provinceObject = allProvinces.getJSONObject(i);
                     Province province = new Province();
                     province.setProvinceName(provinceObject.getString("name"));
+                    Log.d("admin",province.getProvinceName());
                     province.setProvinceCode(provinceObject.getInt("id"));
                     province.save();
                 }
@@ -37,7 +39,7 @@ public class Utility {
     }
 
     public static boolean handleCityResponse(String response, int provinceId) {    // 解析和处理服务器返回的数据
-        if (TextUtils.isEmpty(response)) {
+        if (!TextUtils.isEmpty(response)) {
             try {
                 JSONArray allCities = new JSONArray(response);
                 for (int i = 0; i < allCities.length(); i++) {
@@ -45,6 +47,7 @@ public class Utility {
                     City city = new City();
                     city.setCityName(cityObject.getString("name"));
                     city.setCityCode(cityObject.getInt("id"));
+                    Log.d("admin",city.getCityName());
                     city.setProvinceId(provinceId);
                     city.save();
                 }
@@ -57,7 +60,7 @@ public class Utility {
     }
 
     public static boolean handleCountyResponse(String response, int cityId) {    // 解析和处理服务器返回的县级数据
-        if (TextUtils.isEmpty(response)) {
+        if (!TextUtils.isEmpty(response)) {
             try {
                 JSONArray allCounties = new JSONArray(response);
                 for (int i = 0; i < allCounties.length(); i++) {

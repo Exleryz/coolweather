@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,15 +13,24 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.yezhou.example.coolweather.db.City;
 import com.yezhou.example.coolweather.db.County;
 import com.yezhou.example.coolweather.db.Province;
+import com.yezhou.example.coolweather.util.HttpUtil;
+import com.yezhou.example.coolweather.util.Utility;
 
 import org.litepal.crud.DataSupport;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import okhttp3.internal.Util;
 
 /**
  * Created by Administrator on 2017/12/15.
@@ -109,7 +119,7 @@ public class ChooseAreaFragment extends Fragment {
         if (cityList.size() > 0) {
             dataList.clear();
             for (City city : cityList) {
-                dataList.add(selectedCity.getCityName());    // dataList中的数据 与ListView是相关联的
+                dataList.add(city.getCityName());    // dataList中的数据 与ListView是相关联的
             }
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
@@ -141,17 +151,65 @@ public class ChooseAreaFragment extends Fragment {
         }
     }
 
-    private void queryFromServer(String address,final String type) {
+    private void queryFromServer(String address,final String type) {    // 根据传入的地址和类型从服务器上查询省市县的数据
         showProgressDialog();
+        HttpUtil.sendOkHttpRequest(address, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                getActivity().runOnUiThread(new Runnable() {    // 通过runOnUiThread()方法回到主线程处理逻辑
+                    @Override
+                    public void run() {
+                        closeProgressDialog();
+                        Toast.makeText(getContext(), "加载失败", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseText = response.body().string();
+                boolean result = false;
+                if ("province".equals(type)) {
+                    Log.d("admin", responseText);
+                    result = Utility.handleProvinceResponse(responseText);
+                } else if ("city".equals(type)) {
+                    result = Utility.handleCityResponse(responseText, selectedProvince.getId());
+                } else if ("county".equals(type)) {
+                    result = Utility.handleCountyResponse(responseText, selectedCity.getId());
+                }
+                if (result) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            closeProgressDialog();
+                            if ("province".equals(type)) {
+                                queryProvinces();
+                            } else if ("city".equals(type)) {
+                                queryCities();
+                            } else if ("county".equals(type)) {
+                                queryCounties();
+                            }
+                        }
+                    });
+                }
+            }
+        });
         
     }
 
-    private void showProgressDialog() {
-
+    private void showProgressDialog() {    // 显示进度对话框
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setMessage("正在加载...");
+            progressDialog.setCanceledOnTouchOutside(false);
+        }
+        progressDialog.show();
     }
 
-    private void closeProgressDialog() {
-
+    private void closeProgressDialog() {    // 关闭
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
     }
 }
 
