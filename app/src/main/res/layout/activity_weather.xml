@@ -18,7 +18,7 @@
 
             <include layout="@layout/title" />
 
-            <include layout="now" />
+            <include layout="@layout/now" />
 
             <include layout="@layout/forecast" />
 
