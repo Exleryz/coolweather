@@ -31,3 +31,20 @@
 	    1.requestWeather()查询成功的时候
 		2.showWeatherInfo(weather)函数里
 		    weatherId = weather.basic.weatherId;
+			
+			
+	    Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
+		放在private void showWeatherInfo(Weather weather)中每次刷新会减少2次天气使用访问量
+		访问量用完返回{"HeWeather": [{"status":"no more requests"}]}
+		在onCreate中没有进行对此类返回的优化，程序直接崩溃
+		
+		if (weatherString != null) {    // 有缓存时直接解析天气数据
+            Weather weather = Utility.handleWeatherResponse(weatherString);    // 解析本地weatherString
+            if (weather.status.equals("no more requests")) {
+                Toast.makeText(this, "今日天气查询数已用完", Toast.LENGTH_SHORT).show();
+            } else {
+                weatherId = weather.basic.weatherId;
+                showWeatherInfo(weather);
+            }
+        }

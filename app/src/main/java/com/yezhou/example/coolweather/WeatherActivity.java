@@ -1,5 +1,6 @@
 package com.yezhou.example.coolweather;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -9,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -22,6 +24,7 @@ import com.bumptech.glide.Glide;
 import com.yezhou.example.coolweather.gson.Forecast;
 import com.yezhou.example.coolweather.gson.Suggestion;
 import com.yezhou.example.coolweather.gson.Weather;
+import com.yezhou.example.coolweather.service.AutoUpdateService;
 import com.yezhou.example.coolweather.util.HttpUtil;
 import com.yezhou.example.coolweather.util.Utility;
 
@@ -98,24 +101,31 @@ public class WeatherActivity extends AppCompatActivity {
         }
         if (weatherString != null) {    // 有缓存时直接解析天气数据
             Weather weather = Utility.handleWeatherResponse(weatherString);    // 解析本地weatherString
-            weatherId = weather.basic.weatherId;
-            showWeatherInfo(weather);
-        } else {    // 无缓存时去服务器查询天气
+            if (weather.status.equals("no more requests")) {
+                Toast.makeText(this, "今日天气查询数已用完", Toast.LENGTH_SHORT).show();
+            } else {
+                weatherId = weather.basic.weatherId;
+                showWeatherInfo(weather);
+            }
+        } else {    // 无缓存时去服务器查询天气  一次
             weatherId = getIntent().getStringExtra("weather_id");
+            Log.d("admin", weatherId + "");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(weatherId);
         }
-        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {    // 下拉刷新调用一次
             @Override
             public void onRefresh() {
                 requestWeather(weatherId);
             }
         });
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 
     public void requestWeather(final String weatherId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" +
-            weatherId + "&key=bc0418b57b2d4918819d3974ac1285d9";    // CN101210701
+            weatherId + "&key=d1a98958750e4fdeb92aa46aeffbf5c2";    // CN101210701 bc0418b57b2d4918819d3974ac1285d9
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -184,7 +194,7 @@ public class WeatherActivity extends AppCompatActivity {
         comfortText.setText(comfort);
         carWashText.setText(carWash);
         sportText.setText(sport);
-        weatherId = weather.basic.weatherId;
+
         weatherLayout.setVisibility(View.VISIBLE);
     }
 
